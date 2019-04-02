@@ -45,30 +45,11 @@ void setup() {
   client.setCallback(callback);
 }
 
-void loop() {
-
-  sensors_event_t event;
-
-  float temp = getTemperature(event);
-  Serial.print("Temperature = ");
-  Serial.print(temp);
-  Serial.println("°C");  
-  
-  float hum = getHumidity(event);
-  Serial.print("Humidity: ");
-  Serial.print(hum);
-  Serial.println("%");
-
-  String moist = getMoisture();
-  Serial.print("Moisture : ");
-  Serial.println(moist);
-
-  Serial.println();
-  
-  delay(2000); 
-
+void loop() {  
   //Mqtt loop
   mqttloop();
+
+  delay(5000);
 
 }
 
