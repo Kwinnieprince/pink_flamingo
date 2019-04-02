@@ -23,8 +23,7 @@ const short DRY_SOIL   = 300 + MOISTURE_THRESHOLD;
 const short HUMID_SOIL = 750 + MOISTURE_THRESHOLD;
 
 //Variables for MQTT
-const char* mqtt_server = "d0ftne.messaging.internetofthings.ibmcloud.com";
-#define MQTT_HOST "d0ftne.messaging.internetofthings.ibmcloud.com"
+#define MQTT_HOST "159.8.169.212"
 #define MQTT_PORT 1883
 #define MQTT_DEVICEID "d:d0ftne:bart:ESPTempSensor"
 #define MQTT_USER "use-token-auth"
@@ -41,6 +40,8 @@ void setup() {
   Serial.begin(9600);
   dht.begin();
   connectWifi();
+  client.setServer(MQTT_HOST, MQTT_PORT);
+  client.setCallback(callback);
 }
 
 void loop() {
@@ -147,9 +148,8 @@ void reconnect() {
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
+      Serial.println(" try again in 2 seconds");
+      delay(2000);
     }
   }
 }
@@ -168,10 +168,10 @@ void mqttloop() {
   String payload = "{\"d\":{\"temp\": "+String(temp,1)+", \"humidity\": "+String(humidity,1)+"}}";
 
   if (client.publish(MQTT_TOPIC, (char*) payload.c_str())) {
-    Serial.print("publish ok");
+    Serial.println("publish ok");
   }else
   {
-    Serial.print("publish failed");
+    Serial.println("publish failed");
   }
   
   delay(500);
