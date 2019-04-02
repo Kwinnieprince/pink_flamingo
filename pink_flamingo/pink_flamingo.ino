@@ -48,7 +48,7 @@ void setup() {
 void loop() {  
   //Mqtt loop
   mqttloop();
-
+  Serial.println();
   delay(5000);
 
 }
