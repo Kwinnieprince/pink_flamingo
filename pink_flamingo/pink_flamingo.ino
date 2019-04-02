@@ -2,6 +2,10 @@
 #include <DHT.h>
 #include <DHT_U.h>
 
+// MQTT Library
+#include <PubSubClient.h>
+
+
 // Pins for temp and humidity
 #define DHTPIN 5
 #define DHTTYPE DHT11
@@ -18,10 +22,17 @@ const short MOISTURE_THRESHOLD = 10;
 const short DRY_SOIL   = 300 + MOISTURE_THRESHOLD;
 const short HUMID_SOIL = 750 + MOISTURE_THRESHOLD;
 
-// MQTT Library
-#include <PubSubClient.h>
-
-
+//Variables for MQTT
+const char* mqtt_server = "d0ftne.messaging.internetofthings.ibmcloud.com";
+#define MQTT_HOST "d0ftne.messaging.internetofthings.ibmcloud.com"
+#define MQTT_PORT 1883
+#define MQTT_DEVICEID "d:d0ftne:bart:ESPTempSensor"
+#define MQTT_USER "use-token-auth"
+#define MQTT_TOKEN "4PTfRiAKUbIhzzYZ3g"
+#define MQTT_TOPIC "iot-2/evt/status/fmt/json"
+#define MQTT_TOPIC_DISPLAY "iot-2/evt/status/fmt/json"
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
@@ -53,6 +64,10 @@ void loop() {
   Serial.println();
   
   delay(2000); 
+
+  //Mqtt loop
+  mqttloop();
+
 }
 
 
@@ -104,3 +119,61 @@ String getMoisture() {
   }
 }
 
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+
+  // For the moment, turn on the builtin led if a new message arrives
+  if ((char)payload[0] == '1') {
+    digitalWrite(BUILTIN_LED, LOW);
+  } else {
+    digitalWrite(BUILTIN_LED, HIGH);
+  }
+}
+
+void reconnect() {
+  // Loop until we're reconnected
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+
+    if (client.connect(MQTT_DEVICEID, MQTT_USER, MQTT_TOKEN)) {
+      Serial.println("connected");
+      client.subscribe(MQTT_TOPIC_DISPLAY );
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+}
+
+void mqttloop() {
+
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+
+  sensors_event_t event;
+
+  float temp =  getTemperature(event);
+  float humidity = getHumidity(event);
+  String payload = "{\"d\":{\"temp\": "+String(temp,1)+", \"humidity\": "+String(humidity,1)+"}}";
+
+  if (client.publish(MQTT_TOPIC, (char*) payload.c_str())) {
+    Serial.print("publish ok");
+  }else
+  {
+    Serial.print("publish failed");
+  }
+  
+  delay(500);
+
+}
