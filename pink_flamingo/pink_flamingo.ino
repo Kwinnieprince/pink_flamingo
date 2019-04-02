@@ -18,6 +18,9 @@ const short MOISTURE_THRESHOLD = 10;
 const short DRY_SOIL   = 300 + MOISTURE_THRESHOLD;
 const short HUMID_SOIL = 750 + MOISTURE_THRESHOLD;
 
+// MQTT Library
+#include <PubSubClient.h>
+
 
 
 
