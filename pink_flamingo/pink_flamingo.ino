@@ -37,12 +37,20 @@ PubSubClient client(espClient);
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
 
+#define LightPIN 4
+#define LAMP 0
+#define WATERKRAAN 2
+
 void setup() {
   Serial.begin(9600);
+  pinMode(LightPIN, INPUT);
+  pinMode(LAMP, OUTPUT);
+  pinMode(WATERKRAAN, OUTPUT);
+  
   dht.begin();
   connectWifi();
+  
   client.setServer(MQTT_HOST, MQTT_PORT);
-  client.setCallback(callback);
 }
 
 void loop() {  
@@ -50,7 +58,6 @@ void loop() {
   mqttloop();
   Serial.println();
   delay(5000);
-
 }
 
 
@@ -98,25 +105,12 @@ String getMoisture() {
   } else if (moisture <= HUMID_SOIL) {
     return "Humid soil";
   } else {
-    return "In Water!";
+    return "In Water";
   }
 }
 
-void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
-
-  // For the moment, turn on the builtin led if a new message arrives
-  if ((char)payload[0] == '1') {
-    digitalWrite(BUILTIN_LED, LOW);
-  } else {
-    digitalWrite(BUILTIN_LED, HIGH);
-  }
+boolean getLight() {
+   return !digitalRead(LightPIN);
 }
 
 void reconnect() {
@@ -148,12 +142,16 @@ void mqttloop() {
 
   float temp =  getTemperature(event);
   float humidity = getHumidity(event);
-  String payload = "{\"data\":{\"temp\": " + String(temp,1) + ", \"humidity-air\": " + String(humidity,1) + ", \"humidity-earth\" : \"" +  getMoisture() + "\"}}";
+  String moisture = getMoisture();
+  boolean light = getLight();
+
+  handleEvents(temp, humidity, moisture, light);
+  
+  String payload = "{\"data\":{\"temp\": " + String(temp,2) + ", \"air\": " + String(humidity,1) + ", \"earth\" : \"" +  moisture + "\" , \"light\" : " + light + "}}";
 
   
   if (client.publish(MQTT_TOPIC, (char*) payload.c_str())) {
     Serial.println(payload);
-    Serial.println("publish ok");
   }else
   {
     Serial.println("publish failed");
@@ -161,4 +159,20 @@ void mqttloop() {
   
   delay(500);
 
+}
+
+void handleEvents(float temp, float humidity, String moisture, boolean light) {
+  reactToLight(light);
+}
+
+void reactToLight(boolean light) {
+  if(!light) {
+    digitalWrite(LAMP, HIGH);
+    Serial.println("It's dark so i turn on the light");
+  }
+
+  else {
+    digitalWrite(LAMP, LOW);
+    Serial.println("No light needed to i turn off the light");
+  }
 }
