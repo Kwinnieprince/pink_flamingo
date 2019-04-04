@@ -1,6 +1,10 @@
 
 # Pink flamingo's automated plant health system
 
+## This readme is not updated anymore
+
+for more information, check the [wiki](https://github.com/Kwinnieprince/pink_flamingo/wiki)
+
 ## Introduction
 
 This school project is a projcet to monitor the health of a plant.
