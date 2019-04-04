@@ -31,4 +31,6 @@ We have a solanoid valve that can water your plant automatically.
 
 1. set the ESP module on a breadboard
 
+    ![esp module](pictures/IMG_7188.jpg)
+
 2. 
