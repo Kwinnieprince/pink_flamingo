@@ -10,6 +10,9 @@ We have a solanoid valve that can water your plant automatically.
 ### parts in this wiki
 
 * Requirements
+* Programming the ESP module
+* Starting with the IBM cloud
+* Using NodeRed
 
 ### Requirements
 
@@ -34,4 +37,25 @@ We have a solanoid valve that can water your plant automatically.
     <img src="pictures/IMG_7188.jpg" alt="esp module" width="300">
 
 2. Setup the sensors on the breadboard and set the voltage pins correctly
-3. 
+
+3. Connect the sensors to the ESP module
+
+    <img src="pictures/earthSensor.png" alt="earth sensor" width="300">
+    <img src="pictures/airSensor.png" alt="earth sensor" width="300">
+    <img src="pictures/Led.png" alt="earth sensor" width="300">
+    <img src="pictures/lightSenor.png" alt="earth sensor" width="300">
+    <img src="pictures/relay.png" alt="earth sensor" width="300">
+
+4. Now we can start programming the ESP module and use the IBM cloud
+
+### Programming the ESP module
+
+* First, we need to connect to the wifi
+
+```C++
+
+```
+
+### Starting with the IBM cloud
+
+### Using NodeRed
