@@ -53,8 +53,122 @@ We have a solanoid valve that can water your plant automatically.
 * First, we need to connect to the wifi
 
 ```C++
+// Library for wifi
+#include <ESP8266WiFi.h>
 
+// Variables for wifi
+const char* ssid = "Your-SSID-here";
+const char* password= "Your-password-here";
+
+void setup() {
+    Serial.begin(9600);
+
+    connectWifi();
+}
+
+void loop() { 
+}
+
+void connectWifi(){
+    delay(10);
+
+    Serial.println();
+    Serial.print("Connecting to ");
+    Serial.println(ssid);
+
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(ssid, password);
+
+    while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+    }
+
+    Serial.println("");
+    Serial.print("wifi connected with IP adress: ");
+    Serial.println(WiFi.localIP());
+}
 ```
+
+* If we are connected succesfully to the wifi, we can set up the MQTT service
+
+> We are going to connect the service to the IBM cloud later in this manual.
+
+``` C++
+    // MQTT Library
+    #include <PubSubClient.h>
+
+    //Variables for MQTT
+    #define MQTT_HOST "Your-host-here"
+    #define MQTT_PORT 1883
+    #define MQTT_DEVICEID "Your-device-ID-here"
+    #define MQTT_USER "use-token-auth"
+    #define MQTT_TOKEN "Your-token here"
+    #define MQTT_TOPIC "iot-2/evt/status/fmt/json" // you can choose other topics if you dont't want to use the IBM cloud
+    #define MQTT_TOPIC_DISPLAY "iot-2/cmd/status/fmt/json" // you can choose other topics if you dont't want to use the IBM cloud
+
+    WiFiClient espClient;
+    PubSubClient client(espClient);
+
+    void setup() {
+    Serial.begin(9600);
+
+    //For connecting wifi
+    connectWifi();
+
+    //For connecting the MQTT service
+    client.setServer(MQTT_HOST, MQTT_PORT);
+}
+
+void loop() {  
+    //Mqtt loop
+    mqttloop();
+    Serial.println();
+    delay(5000);
+}
+
+void mqttloop() {
+
+    if (!client.connected()) {
+        reconnect();
+    }
+
+    client.loop();
+
+    sensors_event_t event;
+
+    //These methods will be added later in this guide when we read the code of the sensors
+    // float temp =  getTemperature(event);
+    // float humidity = getHumidity(event);
+    // String moisture = getMoisture();
+    // boolean light = getLight();
+    //handleEvents(temp, humidity, moisture, light);
+
+    //This will be the payload that will be sent with MQTT
+    String payload = "{\"data\":{\"temp\": " + String(temp,2) + ", \"air\": " + String(humidity,1) + ", \"earth\" : \"" +  moisture + "\" , \"light\" : " + light + "}}"; 
+
+
+    if (client.publish(MQTT_TOPIC, (char*) payload.c_str())) {
+        Serial.println(payload);
+    }else
+    {
+        Serial.println("publish failed");
+    }
+
+    delay(500);
+
+}
+```
+
+* Once the MQTT connection is set up, we can start reading the values of the different sensors.
+    * We will start by connecting the humidity sensor
+    * If the sensor gives a value between:
+        * 0-300 &rarr; then the soil is dry
+        * 300-750 &rarr; then the soil is moisturized
+        * 750 - ... &rarr; then the plant is in water or has too much water
+
+> We chose to use the light sensor on a digital port, this means that the sensor can only say if there is light or not (0, 1). The soil-humidity sensor is connected to the serial port. This means that we can read  multiple values than 0 and 1.
+
 
 ### Starting with the IBM cloud
 
