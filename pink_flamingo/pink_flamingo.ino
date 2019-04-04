@@ -13,6 +13,9 @@
 // Library for wifi
 #include <ESP8266WiFi.h>
 
+// Library JSON
+#include <ArduinoJson.h>
+
 // Variables for wifi
 const char* ssid = "ucll-projectweek-IoT";
 const char* password= "Foo4aiHa";
@@ -29,7 +32,7 @@ const short HUMID_SOIL = 750 + MOISTURE_THRESHOLD;
 #define MQTT_USER "use-token-auth"
 #define MQTT_TOKEN "password"
 #define MQTT_TOPIC "iot-2/evt/status/fmt/json"
-#define MQTT_TOPIC_DISPLAY "iot-2/cmd/status/fmt/json"
+#define MQTT_TOPIC_DISPLAY "iot-2/cmd/update/fmt/json"
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -39,25 +42,30 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 
 #define LightPIN 4
 #define LAMP 0
-#define WATERKRAAN 2
+#define WATER 2
+#define MOTION 14
+#define Pi 12
 
 void setup() {
   Serial.begin(9600);
   pinMode(LightPIN, INPUT);
   pinMode(LAMP, OUTPUT);
-  pinMode(WATERKRAAN, OUTPUT);
+  pinMode(WATER, OUTPUT);
+  pinMode(MOTION, INPUT);
+  pinMode(Pi, OUTPUT);
   
   dht.begin();
   connectWifi();
   
   client.setServer(MQTT_HOST, MQTT_PORT);
+  client.setCallback(callback);
 }
 
 void loop() {  
   //Mqtt loop
   mqttloop();
   Serial.println();
-  delay(5000);
+  delay(1000);
 }
 
 
@@ -120,7 +128,7 @@ void reconnect() {
 
     if (client.connect(MQTT_DEVICEID, MQTT_USER, MQTT_TOKEN)) {
       Serial.println("connected");
-      client.subscribe(MQTT_TOPIC_DISPLAY );
+      client.subscribe(MQTT_TOPIC_DISPLAY);
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -144,10 +152,9 @@ void mqttloop() {
   float humidity = getHumidity(event);
   String moisture = getMoisture();
   boolean light = getLight();
+  boolean motion = digitalRead(MOTION);
 
-  handleEvents(temp, humidity, moisture, light);
-  
-  String payload = "{\"data\":{\"temp\": " + String(temp,2) + ", \"air\": " + String(humidity,1) + ", \"earth\" : \"" +  moisture + "\" , \"light\" : " + light + "}}";
+  String payload = "{\"data\":{\"temp\": " + String(temp,2) + ", \"air\": " + String(humidity,1) + ", \"earth\" : \"" +  moisture + "\" , \"light\" : " + light + " , \"motion\" : " + motion + "}}";
 
   
   if (client.publish(MQTT_TOPIC, (char*) payload.c_str())) {
@@ -161,18 +168,71 @@ void mqttloop() {
 
 }
 
-void handleEvents(float temp, float humidity, String moisture, boolean light) {
-  reactToLight(light);
-}
 
 void reactToLight(boolean light) {
   if(!light) {
     digitalWrite(LAMP, HIGH);
-    Serial.println("It's dark so i turn on the light");
   }
 
   else {
     digitalWrite(LAMP, LOW);
-    Serial.println("No light needed to i turn off the light");
   }
+}
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Topic = ");
+  Serial.print(topic);
+  
+  Serial.println();
+  
+  Serial.println("Payload = ");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+
+  Serial.println();
+  
+  StaticJsonDocument<256> jsonBuffer;
+  deserializeJson(jsonBuffer, payload);
+
+  JsonObject root = jsonBuffer.as<JsonObject>();
+
+  if(root["water"] != 0) {
+    Serial.println("Watering plants");
+    openValve(root["water"]);
+  }
+
+  if(root["light"] == 1) {
+    Serial.println("Turning light on");
+    reactToLight(false);
+  }
+
+  
+  if(root["picture"] == 1) {
+    Serial.println("Taking picture");
+    snapPicture();
+  }
+
+  if(root["light"] == 0 && root["water"] == 0 && root["picture"] == 0) {
+    Serial.println("Turning light off");
+    reactToLight(true);
+  }
+}
+
+void openValve(float openTime) {
+  digitalWrite(WATER, HIGH);
+  Serial.println("Opened valve");
+  
+  delay(openTime);
+
+  digitalWrite(WATER, LOW);
+  Serial.println("Closed valve");
+}
+
+void snapPicture() {
+  Serial.println("Sending signal to PI");
+
+  digitalWrite(Pi, HIGH);
+  delay(1000);
+  digitalWrite(Pi, LOW);
 }
