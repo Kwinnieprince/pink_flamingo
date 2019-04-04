@@ -166,9 +166,66 @@ void mqttloop() {
         * 0-300 &rarr; then the soil is dry
         * 300-750 &rarr; then the soil is moisturized
         * 750 - ... &rarr; then the plant is in water or has too much water
+    * When the connector is connected, we can connect the other sensors
 
 > We chose to use the light sensor on a digital port, this means that the sensor can only say if there is light or not (0, 1). The soil-humidity sensor is connected to the serial port. This means that we can read  multiple values than 0 and 1.
 
+``` C++
+  // Libraries for temp and humidity
+  #include <DHT.h>
+  #include <DHT_U.h>
+
+// Variables for misture sensor
+const short MOISTURE_THRESHOLD = 10;
+const short DRY_SOIL   = 300 + MOISTURE_THRESHOLD;
+const short HUMID_SOIL = 750 + MOISTURE_THRESHOLD;
+
+DHT_Unified dht(DHTPIN, DHTTYPE);
+
+#define LightPIN 4
+#define LAMP 0
+#define WATERKRAAN 2
+
+void setup() {
+    Serial.begin(9600);
+    pinMode(LightPIN, INPUT);
+    pinMode(LAMP, OUTPUT);
+    pinMode(WATERKRAAN, OUTPUT);
+
+    dht.begin();
+}
+
+float getTemperature(sensors_event_t event) {
+    dht.temperature().getEvent(&event);
+
+    return event.temperature;
+}
+
+
+float getHumidity(sensors_event_t event) {
+    dht.humidity().getEvent(&event);
+
+    return event.relative_humidity;
+}
+
+String getMoisture() {
+    int moisture = analogRead(A0);
+    moisture     = map(moisture, 0, 1023, 1023, 0);
+
+    if (moisture <= DRY_SOIL) {
+        return "Dry soil";
+    } else if (moisture <= HUMID_SOIL) {
+        return "Humid soil";
+    } else {
+        return "In Water";
+    }
+}
+
+boolean getLight() {
+   return !digitalRead(LightPIN);
+}
+
+```
 
 ### Starting with the IBM cloud
 
