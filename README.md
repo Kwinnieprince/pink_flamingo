@@ -1,5 +1,5 @@
 
-# Pink flamingo's automated plant healt system
+# Pink flamingo's automated plant health system
 
 ## Introduction
 
@@ -14,7 +14,7 @@ We have a solanoid valve that can water your plant automatically.
 ### Requirements
 
 * 1 ESP-8266 (NodeMcu)
-* 1 DH11 or a DH22 if you want to have more accurate results
+* 1 DHT11 or a DHT22 if you want to have more accurate results
 * A PID sensor (Motion sensor)
 * Soil moisture sensor (Flying fish)
 * Light sensor (Flying fish)
@@ -31,6 +31,7 @@ We have a solanoid valve that can water your plant automatically.
 
 1. set the ESP module on a breadboard
 
-    ![esp module](pictures/IMG_7188.jpg)
+    <img src="pictures/IMG_7188.jpg" alt="esp module" width="300">
 
-2. 
+2. Setup the sensors on the breadboard and set the voltage pins correctly
+3. 
