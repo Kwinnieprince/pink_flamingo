@@ -65,7 +65,7 @@ void loop() {
   //Mqtt loop
   mqttloop();
   Serial.println();
-  delay(1000);
+  delay(3000);
 }
 
 
