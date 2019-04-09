@@ -17,8 +17,8 @@
 #include <ArduinoJson.h>
 
 // Variables for wifi
-const char* ssid = "ucll-projectweek-IoT";
-const char* password= "Foo4aiHa";
+const char* ssid = "YOUR SSID HERE";
+const char* password= "YOUR PASSWORD HERE";
 
 // Variables for misture sensor
 const short MOISTURE_THRESHOLD = 10; 
@@ -26,11 +26,11 @@ const short DRY_SOIL   = 300 + MOISTURE_THRESHOLD;
 const short HUMID_SOIL = 750 + MOISTURE_THRESHOLD;
 
 //Variables for MQTT
-#define MQTT_HOST "d0ftne.messaging.internetofthings.ibmcloud.com"
+#define MQTT_HOST "YOUR HOST HERE"
 #define MQTT_PORT 1883
-#define MQTT_DEVICEID "d:d0ftne:bart:ESPTempSensor"
+#define MQTT_DEVICEID "YOUR DEVICE ID HERE"
 #define MQTT_USER "use-token-auth"
-#define MQTT_TOKEN "password"
+#define MQTT_TOKEN "YOUR TOKEN HERE"
 #define MQTT_TOPIC "iot-2/evt/status/fmt/json"
 #define MQTT_TOPIC_DISPLAY "iot-2/cmd/update/fmt/json"
 
